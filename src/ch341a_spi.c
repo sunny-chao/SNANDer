@@ -55,7 +55,14 @@
 #define	 CH341A_CMD_I2C_STM_OUT		0x80
 #define	 CH341A_CMD_I2C_STM_IN		0xC0
 #define	 CH341A_CMD_I2C_STM_MAX		( min( 0x3F, CH341_PACKET_LENGTH ) )
-#define	 CH341A_CMD_I2C_STM_SET		0x60 // bit 2: SPI with two data pairs D5,D4=out, D7,D6=in
+#define	 CH341A_CMD_I2C_STM_SET_MSB	0x80
+
+#ifndef CH341A_CMD_I2C_STM_SET_MSB
+#define	 CH341A_CMD_I2C_STM_SET		0x60 //bit 2: SPI with two data pairs D5,D4=out, D7,D6=in
+#else
+#define	 CH341A_CMD_I2C_STM_SET		0xC0 //bit 7: for MSB/LSB, bit 5-6 not defined, bit 2: SPI with two data pairs D5,D4=out, D7,D6=in
+#endif
+
 #define	 CH341A_CMD_I2C_STM_US		0x40
 #define	 CH341A_CMD_I2C_STM_MS		0x50
 #define	 CH341A_CMD_I2C_STM_DLY		0x0F
@@ -287,9 +294,11 @@ int config_stream(unsigned int speed)
 /* ch341 requires LSB first, swap the bit order before send and after receive */
 static uint8_t swap_byte(uint8_t x)
 {
+	#ifndef CH341A_CMD_I2C_STM_SET_MSB
 	x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
 	x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
 	x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
+	#endif
 	return x;
 }
 
